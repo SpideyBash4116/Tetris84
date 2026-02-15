@@ -1,4 +1,3 @@
-Gemini said
 Terminal Tetris (Modern Edition)
 This is a high-performance, terminal-based Tetris clone that blends the classic 1984 ASCII aesthetic with modern competitive mechanics. Built in Python, it features a robust translation system and advanced gameplay logic found in modern "Guideline" Tetris titles.
 
