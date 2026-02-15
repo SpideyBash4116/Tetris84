@@ -151,3 +151,12 @@ pip install keyboard
 sudo python game.py   # Linux / macOS
 # OR run your terminal as Administrator, then:
 python game.py        # Windows
+
+Screenshots
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/556107ca-6fd8-47eb-86a9-86b9f1c04d36" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/71f52699-ec8d-4e80-abc3-0aaeb167b696" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/682f8c44-9544-4f5f-bd52-57ace905e10e" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/6f98bb55-55af-4100-a7bd-1873d5fe06d4" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/9426bf89-2c07-4cd0-a0a8-37b83fef9fd2" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/9dc33847-4d72-4e66-8afd-ae7d5bd2b68b" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/bf8220bc-c05c-4141-85ff-bb4fb27a5660" />
