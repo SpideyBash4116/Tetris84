@@ -1,162 +1,101 @@
-🎮 Terminal Tetris (Modern Edition)
+Tetris84 🎮
 
-Terminal Tetris (Modern Edition) is a high-performance, terminal-based Tetris clone that blends the classic 1984 ASCII aesthetic with modern competitive mechanics. Written in Python, it features advanced gameplay logic inspired by modern Guideline Tetris titles, along with a robust multilingual system and flicker-free rendering.
+Tetris in 1984 if it was more complex (and if it was made entirely in Python).
 
-✨ Key Features
-🧠 Modern Gameplay Logic
+A terminal-based Tetris clone that blends classic 1984 ASCII aesthetics with modern Guideline-inspired mechanics — including advanced scoring, wall kicks, combo systems, and persistent high scores.
 
-7-Bag randomization for fair and predictable piece distribution
+🚀 Features
 
-Basic Wall Kicks for smoother, more forgiving rotations
+🎯 Modern Tetris logic
 
-🏆 Advanced Scoring System
+7-Bag randomization for fair piece distribution
 
-T-Spin detection
+Basic wall kicks for smoother rotations
 
-Back-to-Back (B2B) bonuses
+T-Spin detection & Back-to-Back bonuses
 
-Combo multipliers for high-skill play
+Combos and advanced scoring
 
-⚙️ Customizable Experience
+🕹 Customizable Experience
 
-Optional Ghost Piece for precise placement
+Optional ghost piece
 
-4 difficulty levels: Easy → Extreme
+Four difficulty levels (Easy → Extreme)
 
-Persistent High Score saving
+⭐ Persistent High Scores
 
-🌍 Multilingual Support
+Saves player progress between sessions
 
-Fully localized UI in:
+💬 Multilingual UI
 
-- English
-
-- Spanish
-
-- Russian
-
-- Ukrainian
-
-- Belarusian
-
-- Kazakh
+English, Spanish, Russian, Ukrainian, Belarusian, Kazakh
 
 ⚡ Flicker-Free Rendering
 
-Uses ANSI escape codes to efficiently update the screen without full clears
+Efficient screen updates using ANSI escape codes
 
-🕹️ Controls
-Move Left / Right	← / →
-Rotate	↑
-Soft Drop	↓
-Hard Drop	Space
-Hold Piece	Shift
-Pause / Resume	P
-Show / Hide Controls	H
-Restart / Quit	R / Q
-🛠️ Technical Details
+🛠️ Requirements
 
-Version: rc-1.02.00
+Python 3.x
 
-Language: Python 3.x
+keyboard module (for real-time input)
 
-Board Size: 10 × 20 (Standard)
-
-Dependency: keyboard (used for real-time, non-blocking input)
-
-🛠️ Technical Requirements
-🐍 Python
-
-Python 3.x (recommended: latest stable version)
-
-⌨️ keyboard Library
-
-This game uses the keyboard module to capture real-time key input.
+Install dependencies:
 
 pip install keyboard
 
 
-⚠️ Elevated Permissions Required
+⚠️ Note: On most systems, the keyboard module may require elevated privileges to capture real-time key events.
 
-Windows: Run your terminal or IDE as Administrator
+▶️ How to Play
 
-Linux / macOS: Run with sudo
+Clone the repository
 
-Why?
-The keyboard library hooks into global system input events to ensure reliable gameplay—even if the terminal briefly loses focus—which requires OS-level permissions.
-
-🖥️ Terminal Compatibility
-
-The game relies on ANSI escape codes (e.g. \033[H) for cursor control and color output.
-
-Recommended terminals
-
-Windows Terminal
-
-Modern PowerShell
-
-iTerm2 (macOS)
-
-GNOME Terminal / xterm (Linux)
-
-Avoid
-
-Legacy cmd.exe
-
-Older IDE output consoles (e.g. basic IDLE windows)
-
-💡 Best Experience Tips
-
-Terminal Size:
-At least 30 rows × 50 columns to fit:
-
-Game board
-
-5-piece “Next” preview
-
-Stats sidebar
-
-Font:
-Use a monospaced font (Cascadia Code, Consolas, Fira Code).
-Proportional fonts will cause block misalignment.
-
-Key Repeat Settings:
-Lower your OS Key Repeat Delay for faster DAS when holding arrow keys.
-
-File Permissions:
-Ensure the game directory is writable so highscore.json can be created and updated.
-
-Final Check:
-Always remember to bring an ID with you—not for the game, just in general 😉
-
-🚀 Getting Started
-
-Install the dependency:
-
-pip install keyboard
-
+Install the dependency (keyboard)
 
 Run the game:
 
 python game.py
 
 
-Note: You may need to run the command with elevated privileges depending on your OS.
+On Windows: Run your terminal as Administrator
 
-🚀 Quick Start (Recommended)
-# Install dependency
-pip install keyboard
+On Linux/macOS: Use sudo if needed
 
-# Run with required permissions
-sudo python game.py   # Linux / macOS
-# OR run your terminal as Administrator, then:
-python game.py        # Windows
+🎮 Controls
+Action	Key
+Move Left	←
+Move Right	→
+Rotate	↑
+Soft Drop	↓
+Hard Drop	Space
+Hold Piece	Shift
+Pause/Resume	P
+Restart	R
+Quit	Q
+Show/Hide Controls	H
+📐 Recommended Setup
 
-Screenshots
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/556107ca-6fd8-47eb-86a9-86b9f1c04d36" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/71f52699-ec8d-4e80-abc3-0aaeb167b696" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/682f8c44-9544-4f5f-bd52-57ace905e10e" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/6f98bb55-55af-4100-a7bd-1873d5fe06d4" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/9426bf89-2c07-4cd0-a0a8-37b83fef9fd2" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/9dc33847-4d72-4e66-8afd-ae7d5bd2b68b" />
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/bf8220bc-c05c-4141-85ff-bb4fb27a5660" />
+Terminal size: ≥ 30 rows × 50 columns
+
+Use a monospaced font (e.g., Consolas, Fira Code)
+
+Lower key-repeat delay for better responsiveness
+
+📦 Included Files
+
+game.py — Main Tetris game logic
+
+highscore.json — Persistent high score storage
+
+LICENSE — MIT License
+
+🧠 Notes
+
+Designed for terminal play, not for IDE consoles (e.g., IDLE).
+
+Scores and mechanics aim to bridge classic play with modern Tetris rules.
+
+📜 License
+
+MIT License — feel free to use, modify, and share!
