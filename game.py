@@ -27,6 +27,76 @@ LINE_CLEAR_SCORES = {
     3: 500,
     4: 800,
 }
+LEADERBOARD_LIMIT = 10
+
+
+def _sanitize_initials(text):
+    cleaned = "".join(ch for ch in text.upper() if ch.isalnum())
+    return (cleaned[:3] or "AAA")
+
+
+def _normalize_leaderboard(entries):
+    normalized = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        try:
+            score = int(entry.get("score", 0))
+        except (TypeError, ValueError):
+            continue
+        initials = _sanitize_initials(str(entry.get("initials", "")))
+        normalized.append({"initials": initials, "score": score})
+    normalized.sort(key=lambda e: e["score"], reverse=True)
+    return normalized[:LEADERBOARD_LIMIT]
+
+
+def load_scores_data():
+    data = {"high_score": 0, "leaderboard": []}
+    try:
+        if HIGH_SCORE_FILE.exists():
+            raw = json.loads(HIGH_SCORE_FILE.read_text(encoding="utf-8"))
+            if isinstance(raw, dict):
+                data["high_score"] = int(raw.get("high_score", 0))
+                data["leaderboard"] = _normalize_leaderboard(raw.get("leaderboard", []))
+    except (OSError, json.JSONDecodeError, ValueError, TypeError):
+        pass
+
+    if data["leaderboard"]:
+        data["high_score"] = max(data["high_score"], data["leaderboard"][0]["score"])
+    return data
+
+
+def save_scores_data(data):
+    payload = {
+        "high_score": int(data.get("high_score", 0)),
+        "leaderboard": _normalize_leaderboard(data.get("leaderboard", [])),
+    }
+    try:
+        HIGH_SCORE_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def score_qualifies_for_leaderboard(score):
+    if score <= 0:
+        return False
+    data = load_scores_data()
+    board = data["leaderboard"]
+    if len(board) < LEADERBOARD_LIMIT:
+        return True
+    return score > board[-1]["score"]
+
+
+def add_leaderboard_entry(initials, score):
+    if score <= 0:
+        return
+    data = load_scores_data()
+    board = data["leaderboard"]
+    board.append({"initials": _sanitize_initials(initials), "score": int(score)})
+    data["leaderboard"] = _normalize_leaderboard(board)
+    if data["leaderboard"]:
+        data["high_score"] = max(int(data.get("high_score", 0)), data["leaderboard"][0]["score"])
+    save_scores_data(data)
 
 DEFAULT_OPTIONS = {
     "show_ghost": True,
@@ -34,7 +104,7 @@ DEFAULT_OPTIONS = {
     "difficulty": "normal",
 }
 
-LANGUAGE_ORDER = ["en", "es", "ru", "uk", "be", "kk"]
+LANGUAGE_ORDER = ["en", "es", "ru", "uk", "be", "kk", "fr", "de", "it", "ka", "hy", "az", "nl", "vl", "fy"]
 
 TEXTS = {
     "en": {
@@ -46,13 +116,17 @@ TEXTS = {
   █   █████   █   █   █  █████ █████ 
 """,
         "play": "Play",
-        "version": "Version rc-1.02.00",
+        "version": "Version rc-1.05.00",
         "options": "Options",
+        "leaderboard": "Leaderboard",
         "exit": "Exit",
         "select_1_3": "Select an option (1-3): ",
         "select_1_4": "Select an option (1-4): ",
         "select_1_5": "Select an option (1-5): ",
         "select_1_7": "Select an option (1-7): ",
+        "select_1_10": "Select an option (1-10): ",
+        "select_1_13": "Select an option (1-13): ",
+        "select_1_16": "Select an option (1-16): ",
         "options_title": "--- OPTIONS ---",
         "ghost_piece": "Ghost Piece",
         "difficulty": "Difficulty",
@@ -69,6 +143,15 @@ TEXTS = {
         "ukrainian": "Ukrainian",
         "belarusian": "Belarusian",
         "kazakh": "Kazakh",
+        "french": "French",
+        "german": "German",
+        "italian": "Italian",
+        "georgian": "Georgian",
+        "armenian": "Armenian",
+        "azerbaijani": "Azerbaijani",
+        "dutch": "Dutch",
+        "flemish": "Flemish",
+        "frisian": "Frisian",
         "difficulty_easy": "Easy",
         "difficulty_normal": "Normal",
         "difficulty_hard": "Hard",
@@ -82,6 +165,11 @@ TEXTS = {
         "controls_2": "Shift: Hold | P: Pause | R: Restart | Q: Back to menu",
         "controls_hint": "Press H to show/hide controls",
         "game_over": "GAME OVER - Press R to restart or Q to go back to menu",
+        "leaderboard_title": "--- LEADERBOARD ---",
+        "no_scores": "No scores yet.",
+        "initials_prompt": "New leaderboard score. Enter initials (3 chars): ",
+        "initials_saved": "Saved: {initials} - {score}",
+        "press_enter": "Press Enter to continue...",
         "bye": "Bye",
     },
     "es": {
@@ -93,13 +181,16 @@ TEXTS = {
   █   █████   █   █   █  █████ █████ 
 """,
         "play": "Jugar",
-        "version": "Versión cal-1.02.00",
+        "version": "Versión cal-1.05.00",
         "options": "Opciones",
         "exit": "Salir",
         "select_1_3": "Selecciona una opcion (1-3): ",
         "select_1_4": "Selecciona una opcion (1-4): ",
         "select_1_5": "Selecciona una opcion (1-5): ",
         "select_1_7": "Selecciona una opcion (1-7): ",
+        "select_1_10": "Selecciona una opcion (1-10): ",
+        "select_1_13": "Selecciona una opcion (1-13): ",
+        "select_1_16": "Selecciona una opcion (1-16): ",
         "options_title": "--- OPCIONES ---",
         "ghost_piece": "Pieza Fantasma",
         "difficulty": "Dificultad",
@@ -116,6 +207,15 @@ TEXTS = {
         "ukrainian": "Ucraniano",
         "belarusian": "Bielorruso",
         "kazakh": "Kazajo",
+        "french": "Frances",
+        "german": "Aleman",
+        "italian": "Italiano",
+        "georgian": "Georgiano",
+        "armenian": "Armenio",
+        "azerbaijani": "Azerbaiyano",
+        "dutch": "Neerlandes",
+        "flemish": "Flamenco",
+        "frisian": "Frison",
         "difficulty_easy": "Facil",
         "difficulty_normal": "Normal",
         "difficulty_hard": "Dificil",
@@ -133,13 +233,13 @@ TEXTS = {
     },
     "ru": {
         "main_title": """
-█████ ████   █████   ████  █████   ████
-  █       █    █    █   █    █    █        
-  █     ██     █     ████    █    █    
-  █       █    █    █   █    █    █       
-  █   ████     █    █   █  █████   ████ 
+█████ ████   █████   ████  █   █   ████
+  █       █    █    █   █  █  ██  █        
+  █     ██     █     ████  █ █ █  █    
+  █       █    █    █   █  ██  █  █       
+  █   ████     █    █   █  █   █   ████ 
 """,
-        "version": "Версия КНР-1.02.00",
+        "version": "Версия КНР-1.05.00",
         "play": "Играть",
         "options": "Опции",
         "exit": "Выход",
@@ -169,7 +269,14 @@ TEXTS = {
         "bye": "Пока",
     },
     "uk": {
-        "version": "Версія ЗК-1.02.00",
+        "main_title": """
+█████ ████   █████   ████  █████   ████
+  █       █    █    █   █    █    █        
+  █     ██     █     ████    █    █    
+  █       █    █    █   █    █    █       
+  █   ████     █    █   █  █████   ████ 
+""",
+        "version": "Версія ЗК-1.05.00",
         "play": "Грати",
         "options": "Опції",
         "exit": "Вихід",
@@ -196,7 +303,14 @@ TEXTS = {
         "bye": "Бувай",
     },
     "be": {
-        "version": "Версія КНВ-1.02.00",
+        "main_title": """
+█████ ████   █████   ████  █████   ████
+  █       █    █    █   █    █    █        
+  █     ██     █     ████    █    █    
+  █       █    █    █   █    █    █       
+  █   ████     █    █   █  █████   ████ 
+""",
+        "version": "Версія КНВ-1.05.00",
         "play": "Гуляць",
         "options": "Налады",
         "exit": "Выйсці",
@@ -223,7 +337,14 @@ TEXTS = {
         "bye": "Пакуль",
     },
     "kk": {
-        "version": "Нұсқа КБ-1.02.00",
+        "main_title": """
+█████ ████   █████   ████  █   █   ████
+  █       █    █    █   █  █  ██  █        
+  █     ██     █     ████  █ █ █  █    
+  █       █    █    █   █  ██  █  █       
+  █   ████     █    █   █  █   █   ████ 
+""",
+        "version": "Нұсқа КБ-1.05.00",
         "play": "Ойнау",
         "options": "Баптаулар",
         "exit": "Шығу",
@@ -248,6 +369,513 @@ TEXTS = {
         "controls_hint": "Басқаруды көрсету/жасыру үшін H басыңыз",
         "game_over": "ОЙЫН АЯҚТАЛДЫ - Қайта бастау үшін R, мәзір үшін Q",
         "bye": "Сау бол",
+    },
+    "fr": {
+        "main_title": """
+█████ █████ █████  ████  █████ █████
+  █   █       █   █   █    █   █    
+  █   ████    █    ████    █   █████
+  █   █       █   █   █    █       █
+  █   █████   █   █   █  █████ █████ 
+""",
+        "play": "Jouer",
+        "version": "Version rc-1.05.00",
+        "options": "Options",
+        "exit": "Quitter",
+        "select_1_3": "Choisissez une option (1-3): ",
+        "select_1_4": "Choisissez une option (1-4): ",
+        "select_1_5": "Choisissez une option (1-5): ",
+        "select_1_10": "Choisissez une option (1-10): ",
+        "options_title": "--- OPTIONS ---",
+        "ghost_piece": "Piece fantome",
+        "difficulty": "Difficulte",
+        "language": "Langue",
+        "reset_defaults": "Reinitialiser",
+        "back": "Retour",
+        "state_on": "ACTIF",
+        "state_off": "INACTIF",
+        "language_title": "--- LANGUE ---",
+        "language_current": "Actuelle: {language}",
+        "english": "Anglais",
+        "spanish": "Espagnol",
+        "russian": "Russe",
+        "ukrainian": "Ukrainien",
+        "belarusian": "Bielorusse",
+        "kazakh": "Kazakh",
+        "french": "Francais",
+        "german": "Allemand",
+        "italian": "Italien",
+        "difficulty_easy": "Facile",
+        "difficulty_normal": "Normal",
+        "difficulty_hard": "Difficile",
+        "difficulty_extreme": "Extreme",
+        "game_header": "--- TETRIS --- SCORE: {score} | RECORD: {high} | NIVEAU: {level} | LIGNES: {lines}",
+        "hold": "RESERVE:",
+        "next": "SUIVANT:",
+        "empty": "(vide)",
+        "paused": "PAUSE - Appuyez sur P pour reprendre",
+        "controls_1": "Haut: Rotation | Gauche/Droite: Deplacer | Bas: Descente douce | Espace: Chute rapide",
+        "controls_2": "Shift: Garder | P: Pause | R: Recommencer | Q: Menu",
+        "controls_hint": "Appuyez sur H pour afficher/masquer les commandes",
+        "game_over": "PARTIE TERMINEE - Appuyez sur R pour recommencer ou Q pour le menu",
+        "bye": "Au revoir",
+    },
+    "de": {
+        "main_title": """
+█████ █████ █████  ████  █████ █████
+  █   █       █   █   █    █   █    
+  █   ████    █    ████    █   █████
+  █   █       █   █   █    █       █
+  █   █████   █   █   █  █████ █████ 
+""",
+        "play": "Spielen",
+        "version": "Version rc-1.05.00",
+        "options": "Optionen",
+        "exit": "Beenden",
+        "select_1_3": "Option waehlen (1-3): ",
+        "select_1_4": "Option waehlen (1-4): ",
+        "select_1_5": "Option waehlen (1-5): ",
+        "select_1_10": "Option waehlen (1-10): ",
+        "options_title": "--- OPTIONEN ---",
+        "ghost_piece": "Geisterstein",
+        "difficulty": "Schwierigkeit",
+        "language": "Sprache",
+        "reset_defaults": "Zuruecksetzen",
+        "back": "Zurueck",
+        "state_on": "AN",
+        "state_off": "AUS",
+        "language_title": "--- SPRACHE ---",
+        "language_current": "Aktuell: {language}",
+        "english": "Englisch",
+        "spanish": "Spanisch",
+        "russian": "Russisch",
+        "ukrainian": "Ukrainisch",
+        "belarusian": "Belarussisch",
+        "kazakh": "Kasachisch",
+        "french": "Franzoesisch",
+        "german": "Deutsch",
+        "italian": "Italienisch",
+        "difficulty_easy": "Leicht",
+        "difficulty_normal": "Normal",
+        "difficulty_hard": "Schwer",
+        "difficulty_extreme": "Extrem",
+        "game_header": "--- TETRIS --- PUNKTE: {score} | REKORD: {high} | LEVEL: {level} | LINIEN: {lines}",
+        "hold": "HALTEN:",
+        "next": "NAECHSTE:",
+        "empty": "(leer)",
+        "paused": "PAUSE - Druecke P zum Fortsetzen",
+        "controls_1": "Oben: Drehen | Links/Rechts: Bewegen | Unten: Soft Drop | Leertaste: Hard Drop",
+        "controls_2": "Shift: Halten | P: Pause | R: Neustart | Q: Menue",
+        "controls_hint": "Druecke H, um Steuerung ein/auszublenden",
+        "game_over": "SPIEL VORBEI - Druecke R fuer Neustart oder Q fuer Menue",
+        "bye": "Tschuess",
+    },
+    "it": {
+        "main_title": """
+█████ █████ █████  ████  █████ █████
+  █   █       █   █   █    █   █    
+  █   ████    █    ████    █   █████
+  █   █       █   █   █    █       █
+  █   █████   █   █   █  █████ █████ 
+""",
+        "play": "Gioca",
+        "version": "Versione rc-1.05.00",
+        "options": "Opzioni",
+        "exit": "Esci",
+        "select_1_3": "Seleziona un'opzione (1-3): ",
+        "select_1_4": "Seleziona un'opzione (1-4): ",
+        "select_1_5": "Seleziona un'opzione (1-5): ",
+        "select_1_10": "Seleziona un'opzione (1-10): ",
+        "options_title": "--- OPZIONI ---",
+        "ghost_piece": "Pezzo fantasma",
+        "difficulty": "Difficolta",
+        "language": "Lingua",
+        "reset_defaults": "Ripristina",
+        "back": "Indietro",
+        "state_on": "ON",
+        "state_off": "OFF",
+        "language_title": "--- LINGUA ---",
+        "language_current": "Corrente: {language}",
+        "english": "Inglese",
+        "spanish": "Spagnolo",
+        "russian": "Russo",
+        "ukrainian": "Ucraino",
+        "belarusian": "Bielorusso",
+        "kazakh": "Kazako",
+        "french": "Francese",
+        "german": "Tedesco",
+        "italian": "Italiano",
+        "difficulty_easy": "Facile",
+        "difficulty_normal": "Normale",
+        "difficulty_hard": "Difficile",
+        "difficulty_extreme": "Estremo",
+        "game_header": "--- TETRIS --- PUNTEGGIO: {score} | RECORD: {high} | LIVELLO: {level} | LINEE: {lines}",
+        "hold": "HOLD:",
+        "next": "PROSSIMI:",
+        "empty": "(vuoto)",
+        "paused": "PAUSA - Premi P per continuare",
+        "controls_1": "Su: Ruota | Sinistra/Destra: Muovi | Giu: Discesa lenta | Spazio: Caduta rapida",
+        "controls_2": "Shift: Hold | P: Pausa | R: Riavvia | Q: Menu",
+        "controls_hint": "Premi H per mostrare/nascondere i comandi",
+        "game_over": "PARTITA FINITA - Premi R per riavviare o Q per il menu",
+        "bye": "Ciao",
+    },
+    "ka": {
+        "main_title": """
+  █     ███     █     ████        █    
+  █    █   █    █    █            █    
+ ███       █   ███    █ █    ███  █  █   ███ 
+█   █  █   █  █   █  █ █ █  █   █ █   █ █   █
+ ███    ███    ███   █   █  █   █  ███  █   █
+""",
+        "play": "თამაში",
+        "version": "ვერსია ქრთ-1.05.00",
+        "options": "პარამეტრები",
+        "leaderboard": "ლიდერბორდი",
+        "exit": "გასვლა",
+        "select_1_4": "აირჩიეთ ვარიანტი (1-4): ",
+        "select_1_5": "აირჩიეთ ვარიანტი (1-5): ",
+        "select_1_13": "აირჩიეთ ვარიანტი (1-13): ",
+        "options_title": "--- პარამეტრები ---",
+        "ghost_piece": "აჩრდილის ფიგურა",
+        "difficulty": "სირთულე",
+        "language": "ენა",
+        "reset_defaults": "საწყისზე დაბრუნება",
+        "back": "უკან",
+        "state_on": "ჩართული",
+        "state_off": "გამორთული",
+        "language_title": "--- ენა ---",
+        "language_current": "მიმდინარე: {language}",
+        "english": "ინგლისური",
+        "spanish": "ესპანური",
+        "russian": "რუსული",
+        "ukrainian": "უკრაინული",
+        "belarusian": "ბელარუსული",
+        "kazakh": "ყაზახური",
+        "french": "ფრანგული",
+        "german": "გერმანული",
+        "italian": "იტალიური",
+        "georgian": "ქართული",
+        "armenian": "სომხური",
+        "azerbaijani": "აზერბაიჯანული",
+        "difficulty_easy": "მარტივი",
+        "difficulty_normal": "საშუალო",
+        "difficulty_hard": "რთული",
+        "difficulty_extreme": "ექსტრემალური",
+        "game_header": "--- ტეტრისი --- ქულა: {score} | რეკორდი: {high} | დონე: {level} | ხაზები: {lines}",
+        "hold": "დაჭერა:",
+        "next": "შემდეგი:",
+        "empty": "(ცარიელი)",
+        "paused": "პაუზა - გაგრძელებისთვის დააჭირეთ P",
+        "controls_1": "ზემოთ: მობრუნება | მარცხ/მარჯვ: მოძრაობა | ქვემოთ: ნელი ვარდნა | Space: სწრაფი ვარდნა",
+        "controls_2": "Shift: დაჭერა | P: პაუზა | R: თავიდან | Q: მენიუ",
+        "controls_hint": "H-ს დაჭერით აჩვენეთ/დამალეთ მართვა",
+        "game_over": "თამაში დასრულდა - R თავიდან ან Q მენიუში",
+        "leaderboard_title": "--- ლიდერბორდი ---",
+        "no_scores": "ქულები ჯერ არ არის.",
+        "initials_prompt": "ახალი შედეგი! შეიყვანეთ ინიციალები (3 სიმბოლო): ",
+        "initials_saved": "შენახულია: {initials} - {score}",
+        "press_enter": "გასაგრძელებლად Enter...",
+        "bye": "ნახვამდის",
+    },
+    "hy": {
+        "main_title": """
+█████ █      █   █   █████ █     █   █
+█     █      █  █ █  █   █ █     █   █
+█████ █████  █  █ █  █   █ █████ █   █
+    █ █      █  █ █  █     █   █ █   █
+█████ █████  ████ █  █     █     █████
+""",
+        "play": "Խաղալ",
+        "version": "Տարբերակ հտ-1.05.00",
+        "options": "Կարգավորումներ",
+        "leaderboard": "Վարկանիշ",
+        "exit": "Ելք",
+        "select_1_4": "Ընտրեք տարբերակ (1-4): ",
+        "select_1_5": "Ընտրեք տարբերակ (1-5): ",
+        "select_1_13": "Ընտրեք տարբերակ (1-13): ",
+        "options_title": "--- ԿԱՐԳԱՎՈՐՈՒՄՆԵՐ ---",
+        "ghost_piece": "Ուրվական ֆիգուր",
+        "difficulty": "Դժվարություն",
+        "language": "Լեզու",
+        "reset_defaults": "Վերակայել",
+        "back": "Հետ",
+        "state_on": "Միացված",
+        "state_off": "Անջատված",
+        "language_title": "--- ԼԵԶՈՒ ---",
+        "language_current": "Ընթացիկ: {language}",
+        "english": "Անգլերեն",
+        "spanish": "Իսպաներեն",
+        "russian": "Ռուսերեն",
+        "ukrainian": "Ուկրաիներեն",
+        "belarusian": "Բելառուսերեն",
+        "kazakh": "Ղազախերեն",
+        "french": "Ֆրանսերեն",
+        "german": "Գերմաներեն",
+        "italian": "Իտալերեն",
+        "georgian": "Վրացերեն",
+        "armenian": "Հայերեն",
+        "azerbaijani": "Ադրբեջաներեն",
+        "difficulty_easy": "Հեշտ",
+        "difficulty_normal": "Նորմալ",
+        "difficulty_hard": "Դժվար",
+        "difficulty_extreme": "Էքստրիմ",
+        "game_header": "--- TETRIS --- ՄԻԱՎՈՐ: {score} | ՌԵԿՈՐԴ: {high} | ՄԱԿԱՐԴԱԿ: {level} | ԳԾԵՐ: {lines}",
+        "hold": "ՊԱՀԵԼ:",
+        "next": "ՀԱՋՈՐԴԸ:",
+        "empty": "(դատարկ)",
+        "paused": "ԴԱԴԱՐ - Շարունակելու համար սեղմեք P",
+        "controls_1": "Վերև: Պտտել | Ձախ/Աջ: Շարժել | Ներքև: Դանդաղ իջեցում | Space: Արագ իջեցում",
+        "controls_2": "Shift: Պահել | P: Դադար | R: Վերսկսել | Q: Մենյու",
+        "controls_hint": "Սեղմեք H՝ կառավարումը ցույց տալու/թաքցնելու համար",
+        "game_over": "ԽԱՂԸ ՎԵՐՋԱՑԱՎ - Սեղմեք R՝ նորից կամ Q՝ մենյու",
+        "leaderboard_title": "--- ՎԱՐԿԱՆԻՇ ---",
+        "no_scores": "Միավորներ դեռ չկան։",
+        "initials_prompt": "Նոր արդյունք։ Մուտքագրեք սկզբնատառերը (3): ",
+        "initials_saved": "Պահվեց: {initials} - {score}",
+        "press_enter": "Շարունակելու համար Enter...",
+        "bye": "Ցտեսություն",
+    },
+    "az": {
+        "main_title": """
+█████ █████ █████  ████  █████ █████
+  █   █       █   █   █    █   █    
+  █   ████    █    ████    █   █████
+  █   █       █   █   █    █       █
+  █   █████   █   █   █  █████ █████ 
+""",
+        "play": "Oyna",
+        "version": "Versiya azr-1.05.00",
+        "options": "Seçimlər",
+        "leaderboard": "Liderlər cədvəli",
+        "exit": "Çıxış",
+        "select_1_4": "Seçim edin (1-4): ",
+        "select_1_5": "Seçim edin (1-5): ",
+        "select_1_13": "Seçim edin (1-13): ",
+        "options_title": "--- SEÇİMLƏR ---",
+        "ghost_piece": "Kölgə fiqur",
+        "difficulty": "Çətinlik",
+        "language": "Dil",
+        "reset_defaults": "Sıfırla",
+        "back": "Geri",
+        "state_on": "AÇIQ",
+        "state_off": "QAPALI",
+        "language_title": "--- DİL ---",
+        "language_current": "Cari: {language}",
+        "english": "İngilis",
+        "spanish": "İspan",
+        "russian": "Rus",
+        "ukrainian": "Ukrayna",
+        "belarusian": "Belarus",
+        "kazakh": "Qazax",
+        "french": "Fransız",
+        "german": "Alman",
+        "italian": "İtalyan",
+        "georgian": "Gürcü",
+        "armenian": "Erməni",
+        "azerbaijani": "Azərbaycan",
+        "difficulty_easy": "Asan",
+        "difficulty_normal": "Normal",
+        "difficulty_hard": "Çətin",
+        "difficulty_extreme": "Ekstrem",
+        "game_header": "--- TETRIS --- XAL: {score} | REKORD: {high} | SƏVİYYƏ: {level} | XƏTLƏR: {lines}",
+        "hold": "SAXLA:",
+        "next": "NÖVBƏTİ:",
+        "empty": "(boş)",
+        "paused": "PAUZA - Davam üçün P basın",
+        "controls_1": "Yuxarı: Döndür | Sol/Sağ: Hərəkət | Aşağı: Yumşaq düşüş | Space: Sərt düşüş",
+        "controls_2": "Shift: Saxla | P: Pauza | R: Yenidən başla | Q: Menyu",
+        "controls_hint": "İdarəni göstərmək/gizlətmək üçün H basın",
+        "game_over": "OYUN BİTDİ - Yenidən başlamaq üçün R, menyu üçün Q",
+        "leaderboard_title": "--- LİDERLƏR CƏDVƏLİ ---",
+        "no_scores": "Hələ xal yoxdur.",
+        "initials_prompt": "Yeni nəticə! İnitialları daxil edin (3 simvol): ",
+        "initials_saved": "Yadda saxlanıldı: {initials} - {score}",
+        "press_enter": "Davam etmək üçün Enter...",
+        "bye": "Sağ ol",
+    },
+    "nl": {
+        "main_title": """
+█████ █████ █████  ████  █████ █████
+  █   █       █   █   █    █   █    
+  █   ████    █    ████    █   █████
+  █   █       █   █   █    █       █
+  █   █████   █   █   █  █████ █████ 
+""",
+        "play": "Spelen",
+        "version": "Versie nl-1.05.00",
+        "options": "Opties",
+        "leaderboard": "Ranglijst",
+        "exit": "Afsluiten",
+        "select_1_4": "Kies een optie (1-4): ",
+        "select_1_5": "Kies een optie (1-5): ",
+        "select_1_16": "Kies een optie (1-16): ",
+        "options_title": "--- OPTIES ---",
+        "ghost_piece": "Spookstuk",
+        "difficulty": "Moeilijkheid",
+        "language": "Taal",
+        "reset_defaults": "Herstellen",
+        "back": "Terug",
+        "state_on": "AAN",
+        "state_off": "UIT",
+        "language_title": "--- TAAL ---",
+        "language_current": "Huidig: {language}",
+        "english": "Engels",
+        "spanish": "Spaans",
+        "russian": "Russisch",
+        "ukrainian": "Oekraïens",
+        "belarusian": "Belarussisch",
+        "kazakh": "Kazachs",
+        "french": "Frans",
+        "german": "Duits",
+        "italian": "Italiaans",
+        "georgian": "Georgisch",
+        "armenian": "Armeens",
+        "azerbaijani": "Azerbeidzjaans",
+        "dutch": "Nederlands",
+        "flemish": "Vlaams",
+        "frisian": "Fries",
+        "difficulty_easy": "Makkelijk",
+        "difficulty_normal": "Normaal",
+        "difficulty_hard": "Moeilijk",
+        "difficulty_extreme": "Extreem",
+        "game_header": "--- TETRIS --- SCORE: {score} | HIGH: {high} | LEVEL: {level} | LIJNEN: {lines}",
+        "hold": "BEWAAR:",
+        "next": "VOLGENDE:",
+        "empty": "(leeg)",
+        "paused": "PAUZE - Druk op P om verder te gaan",
+        "controls_1": "Omhoog: Draaien | Links/Rechts: Bewegen | Omlaag: Zachte val | Spatie: Harde val",
+        "controls_2": "Shift: Bewaar | P: Pauze | R: Herstart | Q: Menu",
+        "controls_hint": "Druk op H om besturing te tonen/verbergen",
+        "game_over": "SPEL VOORBIJ - Druk op R voor herstart of Q voor menu",
+        "leaderboard_title": "--- RANGLIJST ---",
+        "no_scores": "Nog geen scores.",
+        "initials_prompt": "Nieuwe ranglijstscore. Initialen (3 tekens): ",
+        "initials_saved": "Opgeslagen: {initials} - {score}",
+        "press_enter": "Druk op Enter om door te gaan...",
+        "bye": "Tot ziens",
+    },
+    "vl": {
+        "main_title": """
+█████ █████ █████  ████  █████ █████
+  █   █       █   █   █    █   █    
+  █   ████    █    ████    █   █████
+  █   █       █   █   █    █       █
+  █   █████   █   █   █  █████ █████ 
+""",
+        "play": "Spelen",
+        "version": "Versie vl-1.05.00",
+        "options": "Opties",
+        "leaderboard": "Klassement",
+        "exit": "Afsluiten",
+        "select_1_4": "Kies een optie (1-4): ",
+        "select_1_5": "Kies een optie (1-5): ",
+        "select_1_16": "Kies een optie (1-16): ",
+        "options_title": "--- OPTIES ---",
+        "ghost_piece": "Spookblok",
+        "difficulty": "Moeilijkheid",
+        "language": "Taal",
+        "reset_defaults": "Herstellen",
+        "back": "Terug",
+        "state_on": "AAN",
+        "state_off": "UIT",
+        "language_title": "--- TAAL ---",
+        "language_current": "Huidig: {language}",
+        "english": "Engels",
+        "spanish": "Spaans",
+        "russian": "Russisch",
+        "ukrainian": "Oekraïens",
+        "belarusian": "Wit-Russisch",
+        "kazakh": "Kazachs",
+        "french": "Frans",
+        "german": "Duits",
+        "italian": "Italiaans",
+        "georgian": "Georgisch",
+        "armenian": "Armeens",
+        "azerbaijani": "Azerbeidzjaans",
+        "dutch": "Nederlands",
+        "flemish": "Vlaams",
+        "frisian": "Fries",
+        "difficulty_easy": "Makkelijk",
+        "difficulty_normal": "Normaal",
+        "difficulty_hard": "Moeilijk",
+        "difficulty_extreme": "Extreem",
+        "game_header": "--- TETRIS --- SCORE: {score} | HIGH: {high} | LEVEL: {level} | LIJNEN: {lines}",
+        "hold": "HOUD:",
+        "next": "VOLGENDE:",
+        "empty": "(leeg)",
+        "paused": "PAUZE - Druk op P om verder te doen",
+        "controls_1": "Omhoog: Draaien | Links/Rechts: Bewegen | Omlaag: Zachte val | Spatie: Harde val",
+        "controls_2": "Shift: Hou vast | P: Pauze | R: Herstart | Q: Menu",
+        "controls_hint": "Druk op H om de besturing te tonen/verbergen",
+        "game_over": "GAME OVER - Druk op R voor herstart of Q voor menu",
+        "leaderboard_title": "--- KLASSEMENT ---",
+        "no_scores": "Nog geen scores.",
+        "initials_prompt": "Nieuwe score in klassement. Initialen (3 tekens): ",
+        "initials_saved": "Opgeslagen: {initials} - {score}",
+        "press_enter": "Druk op Enter om verder te gaan...",
+        "bye": "Daag",
+    },
+    "fy": {
+        "main_title": """
+█████ █████ █████  ████  █████ █████
+  █   █       █   █   █    █   █    
+  █   ████    █    ████    █   █████
+  █   █       █   █   █    █       █
+  █   █████   █   █   █  █████ █████ 
+""",
+        "play": "Spylje",
+        "version": "Ferzje fy-1.05.00",
+        "options": "Opsjes",
+        "leaderboard": "Klassemint",
+        "exit": "Ofslute",
+        "select_1_4": "Kies in opsje (1-4): ",
+        "select_1_5": "Kies in opsje (1-5): ",
+        "select_1_16": "Kies in opsje (1-16): ",
+        "options_title": "--- OPSJES ---",
+        "ghost_piece": "Spoekstik",
+        "difficulty": "Muoilikheid",
+        "language": "Taal",
+        "reset_defaults": "Weromsette",
+        "back": "Werom",
+        "state_on": "OAN",
+        "state_off": "UT",
+        "language_title": "--- TAAL ---",
+        "language_current": "No: {language}",
+        "english": "Ingelsk",
+        "spanish": "Spaansk",
+        "russian": "Russysk",
+        "ukrainian": "Oekraïnsk",
+        "belarusian": "Wyt-Russysk",
+        "kazakh": "Kazachsk",
+        "french": "Frânsk",
+        "german": "Dútsk",
+        "italian": "Italiaansk",
+        "georgian": "Georgysk",
+        "armenian": "Armeensk",
+        "azerbaijani": "Azerbeidzjaansk",
+        "dutch": "Nederlânsk",
+        "flemish": "Flaamsk",
+        "frisian": "Frysk",
+        "difficulty_easy": "Maklik",
+        "difficulty_normal": "Normaal",
+        "difficulty_hard": "Dreech",
+        "difficulty_extreme": "Ekstreem",
+        "game_header": "--- TETRIS --- PUNTEN: {score} | HEGE: {high} | LEVEL: {level} | LINIEN: {lines}",
+        "hold": "FÊST:",
+        "next": "FOLGJEND:",
+        "empty": "(leech)",
+        "paused": "PAUZE - Druk op P om troch te gean",
+        "controls_1": "Omheech: Draaie | Links/Rjochts: Ferpleatse | Omleech: Sêfte drop | Spaasje: Hurde drop",
+        "controls_2": "Shift: Fêsthâlde | P: Pauze | R: Opnij | Q: Menu",
+        "controls_hint": "Druk op H om bestjoering te sjen/ferbergjen",
+        "game_over": "SPUL OER - Druk op R foar opnij of Q foar menu",
+        "leaderboard_title": "--- KLASSEMINT ---",
+        "no_scores": "Noch gjin scores.",
+        "initials_prompt": "Nije klassemintscore. Inisjalen (3 tekens): ",
+        "initials_saved": "Bewarre: {initials} - {score}",
+        "press_enter": "Druk op Enter om troch te gean...",
+        "bye": "Oant sjen",
     },
 }
 
@@ -319,21 +947,12 @@ class Tetris:
         self.spawn_piece()
 
     def load_high_score(self):
-        try:
-            if HIGH_SCORE_FILE.exists():
-                data = json.loads(HIGH_SCORE_FILE.read_text(encoding="utf-8"))
-                return int(data.get("high_score", 0))
-        except (OSError, json.JSONDecodeError, ValueError):
-            pass
-        return 0
+        return int(load_scores_data().get("high_score", 0))
 
     def save_high_score(self):
-        try:
-            HIGH_SCORE_FILE.write_text(
-                json.dumps({"high_score": self.high_score}, indent=2), encoding="utf-8"
-            )
-        except OSError:
-            pass
+        data = load_scores_data()
+        data["high_score"] = int(self.high_score)
+        save_scores_data(data)
 
     def _refill_bag(self):
         pieces = list(SHAPES.keys())
@@ -397,7 +1016,7 @@ class Tetris:
             ghost_y += 1
         return ghost_y
 
-    def draw(self, paused=False, show_controls=False):
+    def draw(self, paused=False, show_controls=False, status_message=None):
         lines = []
 
         lines.append(
@@ -440,7 +1059,9 @@ class Tetris:
             lines.append("|" + "".join(row) + "|")
         lines.append("-" * (WIDTH * 2 + 2))
 
-        if paused:
+        if status_message:
+            lines.append(status_message)
+        elif paused:
             lines.append(tr(self.options, "paused"))
         else:
             if show_controls:
@@ -624,6 +1245,15 @@ def language_label(options, code):
         "uk": "ukrainian",
         "be": "belarusian",
         "kk": "kazakh",
+        "fr": "french",
+        "de": "german",
+        "it": "italian",
+        "ka": "georgian",
+        "hy": "armenian",
+        "az": "azerbaijani",
+        "nl": "dutch",
+        "vl": "flemish",
+        "fy": "frisian",
     }.get(code, "english")
     return tr(options, key)
 
@@ -645,14 +1275,17 @@ def show_main_menu(options):
         print(tr(options, "version"))
         print(f"1. {tr(options, 'play')}")
         print(f"2. {tr(options, 'options')}")
-        print(f"3. {tr(options, 'exit')}")
-        choice = input(tr(options, "select_1_3")).strip().lower()
+        print(f"3. {tr(options, 'leaderboard')}")
+        print(f"4. {tr(options, 'exit')}")
+        choice = input(tr(options, "select_1_4")).strip().lower()
 
         if choice in ("1", "play", "jugar", "играть", "p"):
             return "play"
         if choice in ("2", "options", "opciones", "опции", "o"):
             return "options"
-        if choice in ("3", "exit", "salir", "выход", "e", "q"):
+        if choice in ("3", "leaderboard", "l"):
+            return "leaderboard"
+        if choice in ("4", "exit", "e", "q"):
             return "exit"
 
 
@@ -667,8 +1300,17 @@ def show_language_menu(options):
         print(f"4. {tr(options, 'ukrainian')}")
         print(f"5. {tr(options, 'belarusian')}")
         print(f"6. {tr(options, 'kazakh')}")
-        print(f"7. {tr(options, 'back')}")
-        choice = input(tr(options, "select_1_7")).strip().lower()
+        print(f"7. {tr(options, 'french')}")
+        print(f"8. {tr(options, 'german')}")
+        print(f"9. {tr(options, 'italian')}")
+        print(f"10. {tr(options, 'georgian')}")
+        print(f"11. {tr(options, 'armenian')}")
+        print(f"12. {tr(options, 'azerbaijani')}")
+        print(f"13. {tr(options, 'dutch')}")
+        print(f"14. {tr(options, 'flemish')}")
+        print(f"15. {tr(options, 'frisian')}")
+        print(f"16. {tr(options, 'back')}")
+        choice = input(tr(options, "select_1_16")).strip().lower()
 
         if choice == "1":
             options["language"] = "en"
@@ -683,6 +1325,24 @@ def show_language_menu(options):
         elif choice == "6":
             options["language"] = "kk"
         elif choice == "7":
+            options["language"] = "fr"
+        elif choice == "8":
+            options["language"] = "de"
+        elif choice == "9":
+            options["language"] = "it"
+        elif choice == "10":
+            options["language"] = "ka"
+        elif choice == "11":
+            options["language"] = "hy"
+        elif choice == "12":
+            options["language"] = "az"
+        elif choice == "13":
+            options["language"] = "nl"
+        elif choice == "14":
+            options["language"] = "vl"
+        elif choice == "15":
+            options["language"] = "fy"
+        elif choice == "16":
             return
 
 
@@ -714,11 +1374,37 @@ def show_options_menu(options):
             return
 
 
+def show_leaderboard(options):
+    clear_screen()
+    print(tr(options, "leaderboard_title"))
+    data = load_scores_data()
+    board = data.get("leaderboard", [])
+    if not board:
+        print(tr(options, "no_scores"))
+    else:
+        for i, entry in enumerate(board, start=1):
+            print(f"{i:>2}. {entry['initials']}  {entry['score']}")
+    input(tr(options, "press_enter"))
+
+
+def prompt_for_leaderboard_initials(options, score):
+    if not score_qualifies_for_leaderboard(score):
+        return
+    clear_screen()
+    print(tr(options, "leaderboard_title"))
+    initials = input(tr(options, "initials_prompt")).strip()
+    initials = _sanitize_initials(initials)
+    add_leaderboard_entry(initials, score)
+    print(tr(options, "initials_saved", initials=initials, score=score))
+    input(tr(options, "press_enter"))
+
+
 def run_game(options):
     game = Tetris(options)
     clear_screen()
 
     paused = False
+    score_submitted = False
     show_controls = False
     last_fall_time = time.time()
     one_shot_keys = {"up": False, "space": False, "shift": False, "p": False, "r": False, "q": False, "h": False}
@@ -730,7 +1416,8 @@ def run_game(options):
         return is_down and not was_down
 
     while True:
-        game.draw(paused=paused, show_controls=show_controls)
+        status_message = tr(options, "game_over") if game.game_over else None
+        game.draw(paused=paused, show_controls=show_controls, status_message=status_message)
 
         if just_pressed("q"):
             game.update_high_score()
@@ -739,6 +1426,7 @@ def run_game(options):
         if just_pressed("r"):
             game = Tetris(options)
             paused = False
+            score_submitted = False
             last_fall_time = time.time()
             clear_screen()
             continue
@@ -750,7 +1438,10 @@ def run_game(options):
             show_controls = not show_controls
 
         if game.game_over:
-            print(tr(options, "game_over"))
+            if not score_submitted:
+                prompt_for_leaderboard_initials(options, game.score)
+                game.high_score = game.load_high_score()
+                score_submitted = True
             time.sleep(0.05)
             continue
 
@@ -784,6 +1475,8 @@ def main():
             run_game(options)
         elif action == "options":
             show_options_menu(options)
+        elif action == "leaderboard":
+            show_leaderboard(options)
         else:
             clear_screen()
             print(tr(options, "bye"))
@@ -792,3 +1485,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
