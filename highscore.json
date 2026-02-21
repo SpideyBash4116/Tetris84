@@ -1,3 +1,25 @@
 {
-  "high_score": 65681
+  "high_score": 65681,
+  "leaderboard": [
+    {
+      "initials": "BAS",
+      "score": 65681
+    },
+    {
+      "initials": "BAS",
+      "score": 47573
+    },
+    {
+      "initials": "BAS",
+      "score": 42712
+    },
+    {
+      "initials": "BAS",
+      "score": 25661
+    },
+    {
+      "initials": "BAS",
+      "score": 2493
+    }
+  ]
 }
