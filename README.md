@@ -28,7 +28,7 @@ Saves player progress between sessions
 
 💬 Multilingual UI
 
-English, Spanish, Russian, Ukrainian, Belarusian, Kazakh, French, German, Italian, Georgian, Armenian, Azerbaijani/Azeri
+English, Spanish, Russian, Ukrainian, Belarusian, Kazakh, French, German, Italian, Georgian, Armenian, Azerbaijani/Azeri, Dutch, Flemish, Frisian
 
 ⚡ Flicker-Free Rendering
 
